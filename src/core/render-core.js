@@ -141,6 +141,7 @@ async function render(_opts = {}) {
     }
 
     if (opts.output === 'pdf') {
+      await page.once('load', () => console.log('Page loaded!'));
       if (opts.url.indexOf('report-generate') !== -1) {
         let reportPagesCount = 1;
         let reportCountPrev;
@@ -149,8 +150,8 @@ async function render(_opts = {}) {
         while (reportPagesCount > 0) {
           reportCountPrev = reportPagesCount;
           reportPagesCount = await page.evaluate(function() {
-            if (typeof reportGenerateHelper !== 'undefined') {
-              return Object.keys(reportGenerateHelper.reportPages).length;
+            if (typeof window.reportGenerateHelper !== 'undefined') {
+              return Object.keys(window.reportGenerateHelper.reportPages).length;
             }
             return 0;
           });
