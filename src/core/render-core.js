@@ -141,34 +141,12 @@ async function render(_opts = {}) {
     }
 
     if (opts.output === 'pdf') {
-      await page.once('load', () => console.log('Page loaded!'));
       if (opts.url.indexOf('report-generate') !== -1) {
-        let reportPagesCount = 1;
-        let reportCountPrev;
-        const currentTime = new Date().getTime();
-        let timeDif = 0;
-        while (reportPagesCount > 0) {
-          reportCountPrev = reportPagesCount;
-          reportPagesCount = await page.evaluate(function() {
-            if (typeof window.reportGenerateHelper !== 'undefined') {
-              return Object.keys(window.reportGenerateHelper.reportPages).length;
-            }
-            return 0;
-          });
-          if (reportCountPrev === reportPagesCount) { // IF we stack on reports drawing, check time
-            timeDif = new Date().getTime() - currentTime;
-            if (timeDif > 30 * 1000) {
-              logger.error(`Error when rendering page: Cannot finish ${reportPagesCount} reports drawing.`);
-              break;
-            }
-          }
-          console.log(reportPagesCount);
-          await sleep(1000);
-        }
+        await page.once('load', () => '');
+        opts.pdf.height = await page.evaluate(() => document.body.offsetHeight);
+        opts.pdf.height += 'px';
+        logger.info(`PDF calculated Height: ${opts.pdf.height}`);
       }
-      opts.pdf.height = await page.evaluate(() => document.body.offsetHeight);
-      opts.pdf.height += 'px';
-      logger.info(`PDF calculated Height: ${opts.pdf.height}`);
 
       data = await page.pdf(opts.pdf);
     } else {
