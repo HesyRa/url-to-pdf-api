@@ -161,6 +161,7 @@ async function render(_opts = {}) {
               break;
             }
           }
+          console.log(reportPagesCount);
           await sleep(1000);
         }
       }
