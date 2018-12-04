@@ -140,15 +140,6 @@ async function render(_opts = {}) {
       throw new Error(msg);
     }
 
-    if (opts.url.indexOf('vatapi.com') !== -1) {
-      logger.info('Generating Invoice for vatapi.com');
-      await page.evaluate(() => {
-        document.body.style.backgroundColor = '#fff';
-        document.querySelector('.invoice').style.borderColor = 'transparent';
-        document.querySelector('.notes p').style.fontSize = '10px';
-      });
-    }
-
     if (opts.output === 'pdf') {
       await page.once('load', () => '');
       if (opts.url.indexOf('report-generate') !== -1) {
@@ -177,6 +168,14 @@ async function render(_opts = {}) {
         opts.pdf.height = await page.evaluate(() => document.body.offsetHeight);
         opts.pdf.height += 'px';
         logger.info(`PDF calculated Height: ${opts.pdf.height}`);
+      }
+      if (opts.url.indexOf('vatapi.com') !== -1) {
+        logger.info('Generating Invoice for vatapi.com');
+        await page.evaluate(() => {
+          document.querySelector('.notes p').style.fontSize = '10px';
+          document.body.style.backgroundColor = '#fff';
+          document.querySelector('.invoice').style.borderColor = 'transparent';
+        });
       }
       data = await page.pdf(opts.pdf);
     } else {
