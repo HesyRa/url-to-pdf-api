@@ -172,9 +172,15 @@ async function render(_opts = {}) {
       if (opts.url.indexOf('vatapi.com') !== -1) {
         logger.info('Generating Invoice for vatapi.com');
         await page.evaluate(() => {
-          document.querySelector('.notes p').style.fontSize = '10px';
           document.body.style.backgroundColor = '#fff';
-          document.querySelector('.invoice').style.borderColor = 'transparent';
+          const $p = document.querySelector('.notes p');
+          if ($p) {
+            $p.style.fontSize = '10px';
+          }
+          const $invoice = document.querySelector('.invoice');
+          if ($invoice) {
+            $invoice.style.borderColor = 'transparent';
+          }
         });
       }
       data = await page.pdf(opts.pdf);
