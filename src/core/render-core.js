@@ -169,7 +169,20 @@ async function render(_opts = {}) {
         opts.pdf.height += 'px';
         logger.info(`PDF calculated Height: ${opts.pdf.height}`);
       }
-
+      if (opts.url.indexOf('vatapi.com') !== -1) {
+        logger.info('Generating Invoice for vatapi.com');
+        await page.evaluate(() => {
+          document.body.style.backgroundColor = '#fff';
+          const $p = document.querySelector('.notes p');
+          if ($p) {
+            $p.style.fontSize = '10px';
+          }
+          const $invoice = document.querySelector('.invoice');
+          if ($invoice) {
+            $invoice.style.borderColor = 'transparent';
+          }
+        });
+      }
       data = await page.pdf(opts.pdf);
     } else {
       // This is done because puppeteer throws an error if fullPage and clip is used at the same
