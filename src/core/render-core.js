@@ -165,9 +165,9 @@ async function render(_opts = {}) {
           }
           logger.info(`reportPagesCount ${reportPagesCount}`);
         } while (reportPagesCount > 0);
-        opts.pdf.height = await page.evaluate(() => document.body.offsetHeight);
-        opts.pdf.height += 'px';
-        logger.info(`PDF calculated Height: ${opts.pdf.height}`);
+        // opts.pdf.height = await page.evaluate(() => document.body.offsetHeight);
+        // opts.pdf.height += 'px';
+        // logger.info(`PDF calculated Height: ${opts.pdf.height}`);
       }
       if (opts.url.indexOf('vatapi.com') !== -1) {
         logger.info('Generating Invoice for vatapi.com');
