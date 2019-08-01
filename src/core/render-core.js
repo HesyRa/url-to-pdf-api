@@ -143,31 +143,28 @@ async function render(_opts = {}) {
     if (opts.output === 'pdf') {
       await page.once('load', () => '');
       if (opts.url.indexOf('report-generate') !== -1) {
-        let reportCountPrev;
         const currentTime = new Date().getTime();
         let timeDif = 0;
-        let reportPagesCount = 1;
+        let reportPagesDrawFinished = false;
         do {
-          reportCountPrev = reportPagesCount;
           await sleep(1000);
-          reportPagesCount = await page.evaluate(() => {
+          reportPagesDrawFinished = await page.evaluate(() => {
             if (typeof window.reportGenerateHelper !== 'undefined') {
-              return Object.keys(window.reportGenerateHelper.reportPages).length;
+              return window.reportGenerateHelper.reportGeneratingFinished;
             }
-            return -1;
+            return false;
           });
-          if (reportCountPrev === reportPagesCount) { // IF we stack on reports drawing, check time
+          if (!reportPagesDrawFinished) { // IF we stack on reports drawing, check time
             timeDif = new Date().getTime() - currentTime;
             if (timeDif > 30 * 1000) {
-              logger.error(`Error when rendering page: Cannot finish ${reportPagesCount} reports drawing.`);
+              logger.error('Error when rendering page: Cannot finish reports drawing.');
               break;
             }
           }
-          logger.info(`reportPagesCount ${reportPagesCount}`);
-        } while (reportPagesCount > 0);
-        opts.pdf.height = await page.evaluate(() => document.body.offsetHeight);
-        opts.pdf.height += 'px';
-        logger.info(`PDF calculated Height: ${opts.pdf.height}`);
+        } while (!reportPagesDrawFinished);
+        // opts.pdf.height = await page.evaluate(() => document.body.offsetHeight);
+        // opts.pdf.height += 'px';
+        // logger.info(`PDF calculated Height: ${opts.pdf.height}`);
       }
       if (opts.url.indexOf('vatapi.com') !== -1) {
         logger.info('Generating Invoice for vatapi.com');
