@@ -65,6 +65,8 @@ const postRender = ex.createRoute((req, res) => {
     if (data === false) {
       res.statusCode = 503;
       res.send('Retry later');
+
+      return;
     }
 
     if (opts.attachmentName) {

@@ -10,8 +10,6 @@ function sleep(ms) {
 }
 
 async function render(_opts = {}) {
-  await sleep(28001)
-
   const opts = _.merge({
     cookies: [],
     scrollPage: false,
