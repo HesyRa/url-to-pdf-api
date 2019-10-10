@@ -61,15 +61,15 @@ const postRender = ex.createRoute(async (req, res) => {
     .digest('hex');
 
   if (cache.has(requestHash)) {
-    logger.info('Hash found in cache', { hash: requestHash });
+    logger.info('Hash found in cache.', { hash: requestHash });
 
     let data = cache.get(requestHash);
 
     if (data === false) {
-      logger.info('Hash is empty', { hash: requestHash });
+      logger.info('Hash is empty.', { hash: requestHash });
 
       try {
-        logger.info('Try to wait for renderer', { hash: requestHash });
+        logger.info('Try to wait for renderer.', { hash: requestHash });
 
         await async.retry({
           times: 5,
@@ -78,7 +78,7 @@ const postRender = ex.createRoute(async (req, res) => {
           data = cache.get(requestHash);
 
           if (data === false) {
-            logger.info('Hash is not finished yet. Retry', { hash: requestHash });
+            logger.info('Hash is not finished yet. Retry.', { hash: requestHash });
             throw Error('Not rendered yet');
           }
         });
@@ -86,13 +86,13 @@ const postRender = ex.createRoute(async (req, res) => {
         logger.info('Hash is not finished. Interrupt connection.', { hash: requestHash });
 
         res.statusCode = 503;
-        res.send('Rendering is in a progress. Try again pleas.');
+        res.send('Rendering is in a progress. Try again please.');
 
         return;
       }
     }
 
-    logger.info('Hash rendering is finished. Return to user', { hash: requestHash });
+    logger.info('Hash rendering is finished. Return to user.', { hash: requestHash });
     cache.del(requestHash);
 
     if (opts.attachmentName) {
@@ -108,6 +108,7 @@ const postRender = ex.createRoute(async (req, res) => {
 
   return renderCore.render(opts)
     .then((data) => {
+      logger.info('Hash result is set to cache.', { hash: requestHash });
       cache.set(requestHash, data);
 
       if (opts.attachmentName) {
@@ -117,6 +118,7 @@ const postRender = ex.createRoute(async (req, res) => {
       res.send(data);
     })
     .catch((reason) => {
+      logger.info('Hash rendering is failed.', { hash: requestHash });
       cache.del(requestHash);
 
       res.statusCode = 500;
