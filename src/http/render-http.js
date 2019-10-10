@@ -1,6 +1,11 @@
 const _ = require('lodash');
 const ex = require('../util/express');
 const renderCore = require('../core/render-core');
+const async = require('async');
+const crypto = require('crypto');
+const CacheManager = require('../cache/cache');
+
+const cache = new CacheManager(120);
 
 function getMimeType(opts) {
   if (opts.output === 'pdf') {
@@ -50,8 +55,33 @@ const postRender = ex.createRoute((req, res) => {
     opts.html = req.body;
   }
 
+  const requestHash = crypto.createHash('sha256')
+    .update(JSON.stringify(opts))
+    .digest('hex');
+
+  if (cache.has(requestHash)) {
+    const data = cache.get(requestHash);
+
+    if (data === false) {
+      res.statusCode = 503;
+      res.send('Retry later');
+    }
+
+    if (opts.attachmentName) {
+      res.attachment(opts.attachmentName);
+    }
+    res.set('content-type', getMimeType(opts));
+    res.send(data);
+
+    return;
+  }
+
+  cache.set(requestHash, false);
+
   return renderCore.render(opts)
     .then((data) => {
+      cache.set(requestHash, data);
+
       if (opts.attachmentName) {
         res.attachment(opts.attachmentName);
       }
