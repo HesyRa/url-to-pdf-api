@@ -92,8 +92,11 @@ const postRender = ex.createRoute((req, res) => {
       res.set('content-type', getMimeType(opts));
       res.send(data);
     })
-    .catch(() => {
+    .catch((reason) => {
       cache.del(requestHash);
+
+      res.statusCode = 500;
+      res.send(reason);
     });
 });
 
