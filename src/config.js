@@ -8,7 +8,7 @@ const config = {
   ALLOW_HTTP: process.env.ALLOW_HTTP === 'true',
   DEBUG_MODE: process.env.DEBUG_MODE === 'true',
   API_TOKENS: [],
-  CORS_ORIGIN: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN : 'https://panel.perfops.net',
+  CORS_ORIGIN: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN : '*',
 };
 
 if (process.env.API_TOKENS) {

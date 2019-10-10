@@ -31,7 +31,7 @@ const getRender = ex.createRoute((req, res) => {
     });
 });
 
-const postRender = ex.createRoute((req, res) => {
+const postRender = ex.createRoute(async (req, res) => {
   const isBodyJson = req.headers['content-type'].includes('application/json');
   if (isBodyJson) {
     const hasContent = _.isString(_.get(req.body, 'url')) || _.isString(_.get(req.body, 'html'));
@@ -60,13 +60,26 @@ const postRender = ex.createRoute((req, res) => {
     .digest('hex');
 
   if (cache.has(requestHash)) {
-    const data = cache.get(requestHash);
+    let data = cache.get(requestHash);
 
     if (data === false) {
-      res.statusCode = 503;
-      res.send('Retry later');
+      try {
+        await async.retry({
+          times: 5,
+          interval: 6 * 1000,
+        }, async () => {
+          data = cache.get(requestHash);
 
-      return;
+          if (data === false) {
+            throw Error('Not rendered yet');
+          }
+        });
+      } catch (e) {
+        res.statusCode = 503;
+        res.send('Rendering is in a progress. Try again pleas.');
+
+        return;
+      }
     }
 
     cache.del(requestHash);
