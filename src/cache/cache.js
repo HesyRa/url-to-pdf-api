@@ -8,7 +8,7 @@ class CacheManager {
     });
   }
 
-  set(key, value, ttl = 0) {
+  set(key, value, ttl) {
     this.storage.set(key, value, ttl);
   }
 

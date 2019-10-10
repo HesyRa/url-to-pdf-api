@@ -92,7 +92,7 @@ const postRender = ex.createRoute(async (req, res) => {
       }
     }
 
-    logger.info('Hash rendering is finished. Return to user.', { hash: requestHash });
+    logger.info('Hash rendering is finished. Return to client.', { hash: requestHash });
     cache.del(requestHash);
 
     if (opts.attachmentName) {
