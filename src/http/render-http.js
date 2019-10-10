@@ -69,6 +69,8 @@ const postRender = ex.createRoute((req, res) => {
       return;
     }
 
+    cache.del(requestHash);
+
     if (opts.attachmentName) {
       res.attachment(opts.attachmentName);
     }
