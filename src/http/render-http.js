@@ -48,7 +48,7 @@ const postRender = ex.createRoute(async (req, res) => {
     opts = _.merge({
       output: 'pdf',
       goto: {
-        timeout: 60 * 1000, // Set default navigation timeout
+        timeout: 90 * 1000, // Set default navigation timeout
       },
       screenshot: {
         type: 'png',
