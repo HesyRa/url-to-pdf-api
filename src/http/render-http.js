@@ -1,6 +1,12 @@
 const _ = require('lodash');
 const ex = require('../util/express');
 const renderCore = require('../core/render-core');
+const logger = require('../util/logger')(__filename);
+const async = require('async');
+const crypto = require('crypto');
+const CacheManager = require('../cache/cache');
+
+const cache = new CacheManager(120);
 
 function getMimeType(opts) {
   if (opts.output === 'pdf') {
@@ -26,7 +32,7 @@ const getRender = ex.createRoute((req, res) => {
     });
 });
 
-const postRender = ex.createRoute((req, res) => {
+const postRender = ex.createRoute(async (req, res) => {
   const isBodyJson = req.headers['content-type'].includes('application/json');
   if (isBodyJson) {
     const hasContent = _.isString(_.get(req.body, 'url')) || _.isString(_.get(req.body, 'html'));
@@ -41,6 +47,9 @@ const postRender = ex.createRoute((req, res) => {
   if (isBodyJson) {
     opts = _.merge({
       output: 'pdf',
+      goto: {
+        timeout: 90 * 1000, // Set default navigation timeout
+      },
       screenshot: {
         type: 'png',
       },
@@ -50,13 +59,73 @@ const postRender = ex.createRoute((req, res) => {
     opts.html = req.body;
   }
 
+  const requestHash = crypto.createHash('sha256')
+    .update(JSON.stringify(opts))
+    .digest('hex');
+
+  if (cache.has(requestHash)) {
+    logger.info('Hash found in cache.', { hash: requestHash });
+
+    let data = cache.get(requestHash);
+
+    if (data === false) {
+      logger.info('Hash is empty.', { hash: requestHash });
+
+      try {
+        logger.info('Try to wait for renderer.', { hash: requestHash });
+
+        await async.retry({
+          times: 5,
+          interval: 5 * 1000,
+        }, async () => {
+          data = cache.get(requestHash);
+
+          if (data === false) {
+            logger.info('Hash is not finished yet. Retry.', { hash: requestHash });
+            throw Error('Not rendered yet');
+          }
+        });
+      } catch (e) {
+        logger.info('Hash is not finished. Interrupt connection.', { hash: requestHash });
+
+        res.statusCode = 503;
+        res.send('Rendering is in a progress. Try again please.');
+
+        return;
+      }
+    }
+
+    logger.info('Hash rendering is finished. Return to client.', { hash: requestHash });
+    cache.del(requestHash);
+
+    if (opts.attachmentName) {
+      res.attachment(opts.attachmentName);
+    }
+    res.set('content-type', getMimeType(opts));
+    res.send(data);
+
+    return;
+  }
+
+  cache.set(requestHash, false);
+
   return renderCore.render(opts)
     .then((data) => {
+      logger.info('Hash result is set to cache.', { hash: requestHash });
+      cache.set(requestHash, data);
+
       if (opts.attachmentName) {
         res.attachment(opts.attachmentName);
       }
       res.set('content-type', getMimeType(opts));
       res.send(data);
+    })
+    .catch((reason) => {
+      logger.info('Hash rendering is failed.', { hash: requestHash });
+      cache.del(requestHash);
+
+      res.statusCode = 500;
+      res.send(reason);
     });
 });
 

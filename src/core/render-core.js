@@ -156,7 +156,7 @@ async function render(_opts = {}) {
           });
           if (!reportPagesDrawFinished) { // IF we stack on reports drawing, check time
             timeDif = new Date().getTime() - currentTime;
-            if (timeDif > 30 * 1000) {
+            if (timeDif > 3000 * 1000) {
               logger.error('Error when rendering page: Cannot finish reports drawing.');
               break;
             }
